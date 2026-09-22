@@ -347,11 +347,11 @@
     }
 
     let metaRows = '';
-    if (pedido)   metaRows += `<dt>Pedido</dt><dd>#${esc(pedido)}</dd>`;
+    if (pedido)   metaRows += `<dt>Recibo</dt><dd>${esc(pedido)}</dd>`;
     if (data)     metaRows += `<dt>Data</dt><dd>${esc(data)}</dd>`;
     if (cliente)  metaRows += `<dt>Cliente</dt><dd>${esc(cliente)}</dd>`;
     if (vendedor) metaRows += `<dt>Vendedor</dt><dd>${esc(vendedor)}</dd>`;
-    if (pagamento) metaRows += `<dt>Pagamento</dt><dd>${esc(pagamento)}</dd>`;
+    if (pagamento) metaRows += `<dt>Forma de Pagto</dt><dd>${esc(pagamento)}</dd>`;
 
     let totaisHtml = '';
     if (subtotal) totaisHtml += `<div class="row"><span>Subtotal</span><span>${esc(subtotal)}</span></div>`;
