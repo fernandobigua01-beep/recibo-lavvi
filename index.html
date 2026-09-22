@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Recibo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #FBF8F2;
+    --ink: #221E19;
+    --muted: #8A8071;
+    --line: #D8D0C0;
+    --stamp: #A8382E;
+    --stamp-soft: #F3E4E1;
+    --shadow: rgba(30, 25, 15, 0.16);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #FBF8F2;
+      --ink: #221E19;
+      --muted: #8A8071;
+      --line: #D8D0C0;
+      --stamp: #C24A3E;
+      --stamp-soft: #F3E4E1;
+      --shadow: rgba(0, 0, 0, 0.5);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #FBF8F2;
+    --ink: #221E19;
+    --muted: #8A8071;
+    --line: #D8D0C0;
+    --stamp: #C24A3E;
+    --stamp-soft: #F3E4E1;
+    --shadow: rgba(0, 0, 0, 0.5);
+  }
+
+  * { box-sizing: border-box; }
+
+  html {
+    scroll-padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  html, body {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: #EFEAE0;
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(34,30,25,0.06) 1px, transparent 0);
+    background-size: 14px 14px;
+    font-family: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+    color: var(--ink);
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .toolbar {
+    width: 100%;
+    max-width: 640px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 18px 16px 6px;
+  }
+
+  .toolbar .brandmark {
+    font-size: 13px;
+    color: var(--muted);
+    letter-spacing: 0.01em;
+  }
+
+  .controls {
+    display: flex;
+    gap: 8px;
+  }
+
+  .seg {
+    display: flex;
+    background: rgba(34,30,25,0.06);
+    border-radius: 8px;
+    padding: 3px;
+    gap: 2px;
+  }
+  .seg button {
+    border: none;
+    background: transparent;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-family: inherit;
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--muted);
+  }
+  .seg button.active {
+    background: var(--paper);
+    color: var(--ink);
+    box-shadow: 0 1px 2px var(--shadow);
+  }
+
+  .print-btn {
+    border: none;
+    background: var(--stamp);
+    color: #FBF8F2;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .print-btn:active { transform: translateY(1px); }
+
+  .stage {
+    width: 100%;
+    max-width: 640px;
+    padding: 10px 16px 48px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .receipt {
+    background: var(--paper);
+    color: var(--ink);
+    width: 100%;
+    max-width: 380px;
+    padding: 30px 26px 34px;
+    box-shadow: 0 10px 30px var(--shadow), 0 2px 6px var(--shadow);
+    position: relative;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  }
+
+  .receipt.a4 {
+    max-width: 520px;
+    padding: 48px 44px 52px;
+  }
+
+  .receipt::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; bottom: -1px;
+    height: 14px;
+    background:
+      radial-gradient(circle at 8px 0, transparent 7px, var(--paper) 7.5px) repeat-x;
+    background-size: 16px 14px;
+    display: none;
+  }
+  .receipt.thermal58::after, .receipt.thermal80::after { display: block; }
+
+  .logo-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 12px;
+  }
+  .logo-wrap img {
+    max-width: 140px;
+    max-height: 70px;
+    object-fit: contain;
+  }
+
+  .empresa {
+    text-align: center;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-weight: 600;
+    font-size: 17px;
+    letter-spacing: 0.01em;
+  }
+  .subinfo {
+    text-align: center;
+    font-size: 11.5px;
+    color: var(--muted);
+    line-height: 1.5;
+    margin-top: 4px;
+  }
+
+  .divider {
+    border: none;
+    border-top: 1.5px dashed var(--line);
+    margin: 18px 0;
+  }
+
+  .meta {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    row-gap: 5px;
+    column-gap: 12px;
+    font-size: 12.5px;
+  }
+  .meta dt { color: var(--muted); }
+  .meta dd { margin: 0; text-align: right; }
+
+  .itens {
+    white-space: pre-wrap;
+    font-size: 12.5px;
+    line-height: 1.85;
+    margin: 0;
+  }
+
+  .totais {
+    font-size: 12.5px;
+  }
+  .totais .row {
+    display: flex;
+    justify-content: space-between;
+    padding: 3px 0;
+  }
+  .totais .row.total {
+    margin-top: 8px;
+    padding-top: 12px;
+    border-top: 1.5px solid var(--ink);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+  }
+  .totais .row.total .val { color: var(--stamp); }
+
+  .stamp-badge {
+    margin: 22px auto 0;
+    width: fit-content;
+    border: 2px solid var(--stamp);
+    color: var(--stamp);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    padding: 5px 14px;
+    border-radius: 3px;
+    transform: rotate(-3deg);
+  }
+
+  .footer {
+    text-align: center;
+    font-size: 11.5px;
+    color: var(--muted);
+    margin-top: 22px;
+    line-height: 1.6;
+  }
+
+  .obs {
+    margin-top: 14px;
+    font-size: 11.5px;
+    color: var(--muted);
+    text-align: center;
+    font-style: italic;
+  }
+
+  .empty-state {
+    max-width: 380px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    padding: 40px 20px;
+  }
+
+  @media print {
+    body { background: #fff; padding: 0; }
+    .toolbar { display: none; }
+    .stage { padding: 0; }
+    .receipt { box-shadow: none; max-width: 100%; }
+    .receipt.thermal58 { width: 58mm; padding: 8px 6px 14px; font-size: 10.5px; }
+    .receipt.thermal80 { width: 80mm; padding: 14px 12px 18px; }
+    .receipt.thermal58 .empresa { font-size: 13.5px; }
+    @page { margin: 5mm; }
+    .receipt.a4 { width: auto; }
+    @page :first { margin: 10mm; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="toolbar">
+    <span class="brandmark">Recibo</span>
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Formato de impressão">
+        <button id="btn-thermal58" class="active" onclick="setFormat('thermal58')">58mm</button>
+        <button id="btn-thermal80" onclick="setFormat('thermal80')">80mm</button>
+        <button id="btn-a4" onclick="setFormat('a4')">A4</button>
+      </div>
+      <button class="print-btn" onclick="window.print()">Imprimir</button>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div id="receipt" class="receipt thermal58"></div>
+  </div>
+
+<script>
+  function qp(name, fallback) {
+    const v = new URLSearchParams(window.location.search).get(name);
+    return (v === null || v === '') ? (fallback || '') : v;
+  }
+
+  function esc(s) {
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  // Accepts either real line breaks or a "|||" delimiter (useful when the
+  // source system can't reliably produce literal newlines in a formula).
+  function multiline(s) {
+    return (s || '').replace(/\s*\|\|\|\s*/g, '\n');
+  }
+
+  function setFormat(fmt) {
+    const r = document.getElementById('receipt');
+    r.classList.remove('thermal58', 'thermal80', 'a4');
+    r.classList.add(fmt);
+    document.getElementById('btn-thermal58').classList.toggle('active', fmt === 'thermal58');
+    document.getElementById('btn-thermal80').classList.toggle('active', fmt === 'thermal80');
+    document.getElementById('btn-a4').classList.toggle('active', fmt === 'a4');
+  }
+
+  function render() {
+    const empresa = qp('empresa');
+    const logo = qp('logo');
+    const endereco = qp('endereco');
+    const telefone = qp('telefone');
+    const cliente = qp('cliente');
+    const pedido = qp('pedido');
+    const data = qp('data');
+    const pagamento = qp('pagamento');
+    const itens = qp('itens');
+    const subtotal = qp('subtotal');
+    const desconto = qp('desconto');
+    const total = qp('total');
+    const obs = qp('obs');
+    const vendedor = qp('vendedor');
+    const parcelas = qp('parcelas');
+    const selo = qp('selo');
+
+    if (!empresa && !itens && !total) {
+      document.getElementById('receipt').outerHTML =
+        '<div class="empty-state">Nenhum dado de venda recebido nesta URL.<br>Abra este link a partir do botão "Imprimir recibo" no app.</div>';
+      document.querySelector('.controls').style.display = 'none';
+      return;
+    }
+
+    let metaRows = '';
+    if (pedido)   metaRows += `<dt>Pedido</dt><dd>#${esc(pedido)}</dd>`;
+    if (data)     metaRows += `<dt>Data</dt><dd>${esc(data)}</dd>`;
+    if (cliente)  metaRows += `<dt>Cliente</dt><dd>${esc(cliente)}</dd>`;
+    if (vendedor) metaRows += `<dt>Vendedor</dt><dd>${esc(vendedor)}</dd>`;
+    if (pagamento) metaRows += `<dt>Pagamento</dt><dd>${esc(pagamento)}</dd>`;
+
+    let totaisHtml = '';
+    if (subtotal) totaisHtml += `<div class="row"><span>Subtotal</span><span>${esc(subtotal)}</span></div>`;
+    if (desconto) totaisHtml += `<div class="row"><span>Desconto</span><span>-${esc(desconto)}</span></div>`;
+    if (total) totaisHtml += `<div class="row total"><span>Total</span><span class="val">${esc(total)}</span></div>`;
+
+    const html = `
+      ${logo ? `<div class="logo-wrap"><img src="${esc(logo)}" alt=""></div>` : ''}
+      <div class="empresa">${esc(empresa) || 'Recibo de venda'}</div>
+      ${(endereco || telefone) ? `<div class="subinfo">${esc(endereco)}${endereco && telefone ? '<br>' : ''}${esc(telefone)}</div>` : ''}
+
+      <hr class="divider">
+
+      ${metaRows ? `<dl class="meta">${metaRows}</dl><hr class="divider">` : ''}
+
+      <pre class="itens">${esc(multiline(itens))}</pre>
+
+      ${totaisHtml ? `<hr class="divider"><div class="totais">${totaisHtml}</div>` : ''}
+
+      ${parcelas ? `
+        <hr class="divider">
+        <div class="empresa" style="font-size:12.5px;">Parcelas do Crediário</div>
+        <pre class="itens" style="margin-top:8px;">${esc(multiline(parcelas))}</pre>
+      ` : ''}
+
+      ${selo ? `<div class="stamp-badge">${esc(selo)}</div>` : ''}
+
+      ${obs ? `<div class="obs">${esc(obs)}</div>` : ''}
+
+      <div class="footer">Obrigado pela preferência!<br>Volte sempre!</div>
+    `;
+
+    document.getElementById('receipt').innerHTML = html;
+
+    if (qp('print') === '1') {
+      setTimeout(() => window.print(), 300);
+    }
+  }
+
+  render();
+</script>
+</body>
+</html>
