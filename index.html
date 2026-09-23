@@ -321,7 +321,6 @@
 
   function parseMoeda(valStr) {
     if (!valStr) return 0;
-    // Limpa pontos e substitui vírgula por ponto para fazer o parse numérico
     const limpo = valStr.toString().replace(/[^\d,-]/g, '').replace(',', '.');
     return parseFloat(limpo) || 0;
   }
@@ -362,34 +361,32 @@
     if (cliente)  metaRows += `<dt>Cliente</dt><dd>${esc(cliente)}</dd>`;
     if (vendedor) metaRows += `<dt>Vendedor</dt><dd>${esc(vendedor)}</dd>`;
     if (pagamento) metaRows += `<dt>Forma de Pagto</dt><dd>${esc(pagamento)}</dd>`;
-    
-// 1. Converte todos os valores de texto para números para fazer a matemática correta
+
+    // Conversões numéricas para cálculo financeiro preciso
     const numSubtotal = parseMoeda(subtotal);
     const numDesconto = parseMoeda(desconto);
     const numEntrada  = parseMoeda(entrada);
     const numTotalUrl = parseMoeda(total);
 
-    // 2. Calcula o saldo real a ser parcelado (Subtotal - Desconto - Entrada)
-    let saldoAsetParcelado = numSubtotal - numDesconto - numEntrada;
-
-    // Se por algum motivo o subtotal não veio na URL, usa o total enviado menos a entrada
+    // Calcula saldo real a ser pago/parcelado
+    let saldoCalculado = numSubtotal - numDesconto - numEntrada;
     if (!subtotal && total) {
-      saldoAsetParcelado = numTotalUrl - numEntrada;
+      saldoCalculado = numTotalUrl - numEntrada;
     }
 
-    // Formatamos o resultado final para exibição no padrão BRL (ex: 920,00)
-    const valorFinalFormatado = formatarMoeda(saldoAsetParcelado);
+    const valorFinalFormatado = formatarMoeda(saldoCalculado);
+    const isCrediario = (pagamento || '').toUpperCase().includes('CREDI');
 
     let totaisHtml = '';
     if (subtotal) totaisHtml += `<div class="row"><span>Subtotal</span><span>${esc(subtotal)}</span></div>`;
     if (desconto && numDesconto > 0) totaisHtml += `<div class="row"><span>Desconto</span><span>-${esc(desconto)}</span></div>`;
     if (entrada && numEntrada > 0)   totaisHtml += `<div class="row"><span>Entrada</span><span>-${esc(entrada)}</span></div>`;
-    
-    // Exibe o rótulo adequado dependendo se é Crediário com entrada ou venda comum
-    if (numEntrada > 0) {
+
+    // Se for CREDIÁRIO, exibe "Total a Parcelar", senão exibe "Total"
+    if (isCrediario) {
       totaisHtml += `<div class="row total"><span>Total a Parcelar</span><span class="val">R$ ${valorFinalFormatado}</span></div>`;
     } else {
-      totaisHtml += `<div class="row total"><span>Total</span><span class="val">${esc(total || valorFinalFormatado)}</span></div>`;
+      totaisHtml += `<div class="row total"><span>Total</span><span class="val">${esc(total || ('R$ ' + valorFinalFormatado))}</span></div>`;
     }
 
     const html = `
