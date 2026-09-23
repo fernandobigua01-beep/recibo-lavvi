@@ -362,24 +362,35 @@
     if (cliente)  metaRows += `<dt>Cliente</dt><dd>${esc(cliente)}</dd>`;
     if (vendedor) metaRows += `<dt>Vendedor</dt><dd>${esc(vendedor)}</dd>`;
     if (pagamento) metaRows += `<dt>Forma de Pagto</dt><dd>${esc(pagamento)}</dd>`;
-
-    // Cálculos dinâmicos se houver Entrada
+    
+// 1. Converte todos os valores de texto para números para fazer a matemática correta
     const numSubtotal = parseMoeda(subtotal);
     const numDesconto = parseMoeda(desconto);
-    const numEntrada = parseMoeda(entrada);
+    const numEntrada  = parseMoeda(entrada);
+    const numTotalUrl = parseMoeda(total);
 
-    // Se o valor do total não for informado, calcula: Subtotal - Desconto - Entrada
-    let totalExibido = total;
-    if (!total && subtotal) {
-      const calcTotal = numSubtotal - numDesconto - numEntrada;
-      totalExibido = formatarMoeda(calcTotal);
+    // 2. Calcula o saldo real a ser parcelado (Subtotal - Desconto - Entrada)
+    let saldoAsetParcelado = numSubtotal - numDesconto - numEntrada;
+
+    // Se por algum motivo o subtotal não veio na URL, usa o total enviado menos a entrada
+    if (!subtotal && total) {
+      saldoAsetParcelado = numTotalUrl - numEntrada;
     }
+
+    // Formatamos o resultado final para exibição no padrão BRL (ex: 920,00)
+    const valorFinalFormatado = formatarMoeda(saldoAsetParcelado);
 
     let totaisHtml = '';
     if (subtotal) totaisHtml += `<div class="row"><span>Subtotal</span><span>${esc(subtotal)}</span></div>`;
     if (desconto && numDesconto > 0) totaisHtml += `<div class="row"><span>Desconto</span><span>-${esc(desconto)}</span></div>`;
     if (entrada && numEntrada > 0)   totaisHtml += `<div class="row"><span>Entrada</span><span>-${esc(entrada)}</span></div>`;
-    if (totalExibido) totaisHtml += `<div class="row total"><span>Total a Parcelar</span><span class="val">${esc(totalExibido)}</span></div>`;
+    
+    // Exibe o rótulo adequado dependendo se é Crediário com entrada ou venda comum
+    if (numEntrada > 0) {
+      totaisHtml += `<div class="row total"><span>Total a Parcelar</span><span class="val">R$ ${valorFinalFormatado}</span></div>`;
+    } else {
+      totaisHtml += `<div class="row total"><span>Total</span><span class="val">${esc(total || valorFinalFormatado)}</span></div>`;
+    }
 
     const html = `
       ${logo ? `<div class="logo-wrap"><img src="${esc(logo)}" alt=""></div>` : ''}
