@@ -306,8 +306,6 @@
     return d.innerHTML;
   }
 
-  // Accepts either real line breaks or a "|||" delimiter (useful when the
-  // source system can't reliably produce literal newlines in a formula).
   function multiline(s) {
     return (s || '').replace(/\s*\|\|\|\s*/g, '\n');
   }
@@ -319,6 +317,17 @@
     document.getElementById('btn-thermal58').classList.toggle('active', fmt === 'thermal58');
     document.getElementById('btn-thermal80').classList.toggle('active', fmt === 'thermal80');
     document.getElementById('btn-a4').classList.toggle('active', fmt === 'a4');
+  }
+
+  function parseMoeda(valStr) {
+    if (!valStr) return 0;
+    // Limpa pontos e substitui vírgula por ponto para fazer o parse numérico
+    const limpo = valStr.toString().replace(/[^\d,-]/g, '').replace(',', '.');
+    return parseFloat(limpo) || 0;
+  }
+
+  function formatarMoeda(num) {
+    return num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
   function render() {
@@ -333,6 +342,7 @@
     const itens = qp('itens');
     const subtotal = qp('subtotal');
     const desconto = qp('desconto');
+    const entrada = qp('entrada');
     const total = qp('total');
     const obs = qp('obs');
     const vendedor = qp('vendedor');
@@ -353,10 +363,23 @@
     if (vendedor) metaRows += `<dt>Vendedor</dt><dd>${esc(vendedor)}</dd>`;
     if (pagamento) metaRows += `<dt>Forma de Pagto</dt><dd>${esc(pagamento)}</dd>`;
 
+    // Cálculos dinâmicos se houver Entrada
+    const numSubtotal = parseMoeda(subtotal);
+    const numDesconto = parseMoeda(desconto);
+    const numEntrada = parseMoeda(entrada);
+
+    // Se o valor do total não for informado, calcula: Subtotal - Desconto - Entrada
+    let totalExibido = total;
+    if (!total && subtotal) {
+      const calcTotal = numSubtotal - numDesconto - numEntrada;
+      totalExibido = formatarMoeda(calcTotal);
+    }
+
     let totaisHtml = '';
     if (subtotal) totaisHtml += `<div class="row"><span>Subtotal</span><span>${esc(subtotal)}</span></div>`;
-    if (desconto) totaisHtml += `<div class="row"><span>Desconto</span><span>-${esc(desconto)}</span></div>`;
-    if (total) totaisHtml += `<div class="row total"><span>Total</span><span class="val">${esc(total)}</span></div>`;
+    if (desconto && numDesconto > 0) totaisHtml += `<div class="row"><span>Desconto</span><span>-${esc(desconto)}</span></div>`;
+    if (entrada && numEntrada > 0)   totaisHtml += `<div class="row"><span>Entrada</span><span>-${esc(entrada)}</span></div>`;
+    if (totalExibido) totaisHtml += `<div class="row total"><span>Total a Parcelar</span><span class="val">${esc(totalExibido)}</span></div>`;
 
     const html = `
       ${logo ? `<div class="logo-wrap"><img src="${esc(logo)}" alt=""></div>` : ''}
